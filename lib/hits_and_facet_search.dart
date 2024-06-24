@@ -80,10 +80,7 @@ class _HitsAndFacetSearchState extends State<HitsAndFacetSearch> {
           child: StreamBuilder<List<Company>>(
             // Listen and display hits search results
             stream: controller.companies,
-            builder: (
-              BuildContext context,
-              AsyncSnapshot<List<Company>> snapshot,
-            ) {
+            builder: (BuildContext context, snapshot) {
               if (snapshot.hasData) {
                 final list = snapshot.data ?? [];
 
