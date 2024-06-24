@@ -1,13 +1,10 @@
 import 'dart:convert';
 
 import 'package:algolia_helper_flutter/algolia_helper_flutter.dart';
+import 'package:algolia_local_testing/algolia_credentials.dart';
 import 'package:flutter/material.dart';
 
 class HitsAndFacetSearchController extends ChangeNotifier {
-  // static const algoliaID = 'JBXDE4H9KI';
-  // static const algoliaAPIKey = '1e23fd0a1690f8bc0f1c17a07a123583';
-  // static const algoliaIndexName = 'companies';
-
   // Create a multi searcher.
   // The Searcher performs search requests and obtains search result
   final multiSearcher = MultiSearcher(
@@ -18,7 +15,7 @@ class HitsAndFacetSearchController extends ChangeNotifier {
   // late FacetSearcher facetSearcher;
   late final _searcher = multiSearcher.addHitsSearcher(
     initialState: const SearchState(
-      indexName: algoliaIndexName,
+      indexName: 'companies',
       facets: ['*'],
     ),
   );
