@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:algolia_helper_flutter/algolia_helper_flutter.dart';
@@ -5,6 +6,8 @@ import 'package:algolia_local_testing/algolia_credentials.dart';
 import 'package:flutter/material.dart';
 
 class HitsAndFacetSearchController extends ChangeNotifier {
+  final _streamController = StreamController<List<Company>>();
+
   // Create a multi searcher.
   // The Searcher performs search requests and obtains search result
   final multiSearcher = MultiSearcher(
@@ -25,13 +28,16 @@ class HitsAndFacetSearchController extends ChangeNotifier {
 
   HitsAndFacetSearchController() {
     _components = CompositeDisposable()..add(_searcher);
+    _searcher.responses.listen(_searchResponseToList);
+  }
+
+  void _searchResponseToList(SearchResponse response) {
+    _streamController
+        .add(response.hits.map((e) => Company.fromMap(e)).toList());
   }
 
   Stream<List<Company>> get companies {
-    final list = _searcher.responses
-        .map((e) => e.hits.map((e) => Company.fromMap(e)).toList());
-
-    return list;
+    return _streamController.stream;
   }
 
   Stream<Map<String, List<Facet>>> get facets {
@@ -71,7 +77,7 @@ class Company {
 
   factory Company.fromMap(Map<String, dynamic> map) {
     return Company(
-      id: map['id'] as String,
+      id: map['objectID'] as String,
       name: map['name'] != null ? map['name'] as String : null,
       cnpj: map['cnpj'] != null ? map['cnpj'] as String : null,
     );
