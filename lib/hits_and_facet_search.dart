@@ -1,5 +1,6 @@
-import 'package:algolia_helper_flutter/algolia_helper_flutter.dart';
+import 'package:algolia_local_testing/hits_and_facet_search_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HitsAndFacetSearch extends StatefulWidget {
   const HitsAndFacetSearch({super.key});
@@ -9,33 +10,10 @@ class HitsAndFacetSearch extends StatefulWidget {
 }
 
 class _HitsAndFacetSearchState extends State<HitsAndFacetSearch> {
-  // Create a multi searcher.
-  // The Searcher performs search requests and obtains search result
-  final multiSearcher = MultiSearcher(
-    applicationID: 'latency',
-    apiKey: '1f6fd3a6fb973cb08419fe7d288fa4db',
-  );
-
-  late FacetSearcher facetSearcher;
-  late HitsSearcher hitsSearcher;
-
-  _HitsAndFacetSearchState() {
-    hitsSearcher = multiSearcher.addHitsSearcher(
-      initialState: const SearchState(
-        indexName: 'instant_search',
-      ),
-    );
-    facetSearcher = multiSearcher.addFacetSearcher(
-        initialState: const FacetSearchState(
-      facet: 'brand',
-      searchState: SearchState(
-        indexName: 'instant_search',
-      ),
-    ));
-  }
-
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<HitsAndFacetSearchController>(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -49,8 +27,8 @@ class _HitsAndFacetSearchState extends State<HitsAndFacetSearch> {
           child: Center(
             child: TextField(
               onChanged: (input) {
-                facetSearcher.query(input);
-                hitsSearcher.query(input);
+                // facetSearcher.query(input);
+                controller.search(input);
               }, // 3. Run your search operations
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.search),
@@ -62,63 +40,61 @@ class _HitsAndFacetSearchState extends State<HitsAndFacetSearch> {
         ),
       ),
       body: Column(children: [
-        const Header(title: 'Brands'),
-        Expanded(
-          child: StreamBuilder<FacetSearchResponse>(
-            // Listen and display facet search results
-            stream: facetSearcher.responses,
-            builder: (
-              BuildContext context,
-              AsyncSnapshot<FacetSearchResponse> snapshot,
-            ) {
-              if (snapshot.hasData) {
-                final response = snapshot.data;
-                final facets = response?.facetHits.toList() ?? [];
-                return ListView.builder(
-                  itemCount: facets.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final facet = facets[index];
-                    return ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          style: Theme.of(context).textTheme.titleSmall,
-                          children: facet.getHighlightedString().toInlineSpans()
-                            ..add(TextSpan(text: '(${facet.count})')),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              } else {
-                return const CircularProgressIndicator();
-              }
-            },
-          ),
-        ),
+        // const Header(title: 'Brands'),
+        // Expanded(
+        //   child: StreamBuilder<FacetSearchResponse>(
+        //     // Listen and display facet search results
+        //     stream: facetSearcher.responses,
+        //     builder: (
+        //       BuildContext context,
+        //       AsyncSnapshot<FacetSearchResponse> snapshot,
+        //     ) {
+        //       if (snapshot.hasData) {
+        //         final response = snapshot.data;
+        //         final facets = response?.facetHits.toList() ?? [];
+        //         return ListView.builder(
+        //           itemCount: facets.length,
+        //           itemBuilder: (BuildContext context, int index) {
+        //             final facet = facets[index];
+        //             return ListTile(
+        //               title: RichText(
+        //                 text: TextSpan(
+        //                   style: Theme.of(context).textTheme.titleSmall,
+        //                   children: facet.getHighlightedString().toInlineSpans()
+        //                     ..add(TextSpan(text: '(${facet.count})')),
+        //                 ),
+        //               ),
+        //             );
+        //           },
+        //         );
+        //       } else {
+        //         return const CircularProgressIndicator();
+        //       }
+        //     },
+        //   ),
+        // ),
+        // const FiltersWidget(),
         const Divider(),
         const Header(title: 'Items'),
         Expanded(
-          child: StreamBuilder<SearchResponse>(
+          child: StreamBuilder<List<Company>>(
             // Listen and display hits search results
-            stream: hitsSearcher.responses,
+            stream: controller.companies,
             builder: (
               BuildContext context,
-              AsyncSnapshot<SearchResponse> snapshot,
+              AsyncSnapshot<List<Company>> snapshot,
             ) {
               if (snapshot.hasData) {
-                final response = snapshot.data;
-                final hits = response?.hits.toList() ?? [];
+                final list = snapshot.data ?? [];
+
                 return ListView.builder(
-                  itemCount: hits.length,
+                  itemCount: list.length,
                   itemBuilder: (BuildContext context, int index) {
-                    final hit = hits[index];
+                    final company = list[index];
                     return ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          style: Theme.of(context).textTheme.titleSmall,
-                          children:
-                              hit.getHighlightedString('name').toInlineSpans(),
-                        ),
+                      title: Text(
+                        company.name ?? company.cnpj ?? company.id,
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
                     );
                   },
